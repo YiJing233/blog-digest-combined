@@ -22,8 +22,28 @@ from typing import Any
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 
+# Tracking-param blocklist. These have semantic meaning only on the
+# original referrer; passing them forward across share/feed would falsely
+# attribute traffic. Lowercased once at import.
+_TRACKING_PARAMS = frozenset({
+    # classic utm family
+    "utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "utm_id",
+    # referrer hints
+    "ref", "source", "ref_source",
+    # 3rd-party click IDs
+    "fbclid", "gclid", "msclkid", "mc_cid", "mc_eid",
+    "igshid", "igclid", "ttclid", "li_fat_id", "li_share",
+    # analytics
+    "_ga", "_gl", "_hsenc", "_hsmi",
+    # CN-domain trackers (RSS feeds in zh-CN)
+    "from", "refid", "scene",
+})
+_TRACKING_PREFIXES = ("utm_",)
+
+
 def canonical_url(u: str) -> str:
-    """Canonicalize URL: strip utm_*/ref/source params, trailing slash, fragment.
+    """Canonicalize URL: strip tracking params + fragment + trailing slash;
+    lowercase the host (DNS is case-insensitive).
 
     Examples:
         >>> canonical_url("https://example.com/foo/?utm_source=x&ref=y#bar")
@@ -38,15 +58,15 @@ def canonical_url(u: str) -> str:
         return u
     try:
         sp = urlsplit(u)
-        sp = sp._replace(fragment="")
+        sp = sp._replace(fragment="", netloc=sp.netloc.lower())
         path = sp.path.rstrip("/") if sp.path != "/" else sp.path
         qs = parse_qsl(sp.query, keep_blank_values=True)
-        qs = [
+        kept = [
             (k, v) for k, v in qs
-            if not k.lower().startswith("utm_") and k.lower() not in ("ref", "source")
+            if k.lower() not in _TRACKING_PARAMS
+            and not any(k.lower().startswith(p) for p in _TRACKING_PREFIXES)
         ]
-        new_q = urlencode(qs)
-        return urlunsplit((sp.scheme, sp.netloc, path, new_q, ""))
+        return urlunsplit((sp.scheme, sp.netloc, path, urlencode(kept), ""))
     except Exception:
         return u
 
@@ -172,12 +192,19 @@ def migrate_legacy_keys_to_canonical(seen: dict[str, str]) -> dict[str, str]:
 
     When multiple entries collapse to the same canonical key, keep the MAX date.
 
+    Drops entries with corrupt date strings — keeps poisoned data forever
+    would silently bias the dedup window.
+
     This repairs state files written before we adopted the canonical-URL rule
     (2026-09-23): without migration, old raw-URL keys would never deduplicate
     with new canonical keys.
     """
     new: dict[str, str] = {}
     for raw_url, date_str in seen.items():
+        try:
+            datetime.strptime(date_str, "%Y-%m-%d")
+        except ValueError:
+            continue  # skip entries with unparseable dates
         c = canonical_url(raw_url)
         if c in new:
             new[c] = max(new[c], date_str)

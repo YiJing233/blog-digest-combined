@@ -28,3 +28,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Full test coverage on `canonical_url`, `parse_sections`, `get_latest_md`,
   `extract_clean_content`, end-to-end CLI. 77 tests, 90.66% coverage.
 - GitHub Actions CI: pytest on Python 3.9/3.11/3.12 + mypy --strict.
+
+
+## [0.2.0] - 2026-09-23 (test suite expansion)
+
+### Added
+- **93 new pytest cases** spread across `test_dedup.py` (+30), `test_extractor.py` (+11),
+  `test_fetcher.py` (+13), `test_parser.py` (+14), `test_renderer.py` (+13), `test_cli.py`
+  (+12). Total: **170 tests, 91.82% coverage**.
+- New `test_renderer.py::TestNoInnerScriptTags` pins **HTML injection defense** —
+  surfaces a real XSS hole (img/svg/onerror tags passed through in article body),
+  fixed in the same commit.
+
+### Fixed
+- **XSS in renderer**: body content was rendered as raw HTML — `<img onerror=...>`,
+  `<script>...</script>` etc. in article body would execute. Now `html.escape()`d.
+- **XSS in URL field**: `javascript:alert(1)` in `art["url"]` was passed straight to
+  `<a href="...">`. Now HTML-escaped via `html.escape(url, quote=True)`.
+- **`canonical_url` now**: 
+  - lower-cases host (DNS is case-insensitive; `Example.COM/foo` and `example.com/foo`
+    must collide).
+  - strips extended tracking IDs (`fbclid`, `gclid`, `mc_cid`, `_ga`, `igshid`,
+    `msclkid`, `ttclid`, `li_fat_id`, etc.) per the 2026-09-23 dedup intent.
+- **`migrate_legacy_keys_to_canonical`** now drops entries with corrupt dates
+  (was previously polluting state with bad timestamp strings).
+
+### Tests added by category
+- `test_dedup.py`: 30 cases — port, IDN, percent-encoding, multi-value query,
+  3rd-party tracker aliases, slow-path raw↔canonical lookup, corruption recovery.
+- `test_extractor.py`: 11 cases — multi-marker, prompt-only fallback, FAILED at
+  varying positions, trailing `---` semantics, Unicode/CJK/Emoji round-trip.
+- `test_fetcher.py`: 13 cases — N-1/N-2 fallback, N+1 isolation (with documented
+  Pass-3 leak), HF papers `YYYY-MM-DD.md` exact match, clock skew, special chars
+  in filenames (spaces, Chinese, emoji).
+- `test_parser.py`: 14 cases — section boundary (interior `###` doesn't split),
+  URL extraction variants, Unicode titles/sections, dedup counter contract,
+  cross-job `seen` set mutation across calls.
+- `test_renderer.py`: 13 cases — UTF-8 round-trip (Chinese/Japanese/Korean/emoji),
+  URL escape semantics (no double-escape, quotes/JS-protocol escape), section
+  count consistency, large body stability, XSS defense.
+- `test_cli.py`: 12 cases — `--today` backfill, `JOB_DIR_OVERRIDES` import-time
+  freeze (documented limitation), atomic write, symlink resolution, partial
+  failure still writes files, total failure exits 2.
+

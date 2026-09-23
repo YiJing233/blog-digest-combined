@@ -128,7 +128,8 @@ def _article_body_html(art: dict) -> str:
             in_source = True
             continue
         if line.strip():
-            body_lines.append(f"<p>{line}</p>")
+            # HTML-escape every body line — defense against XSS in article content
+            body_lines.append(f"<p>{html.escape(line)}</p>")
     body = "\n".join(body_lines)
     body += f'<div class="source-link">🔗 <a href="{html.escape(url)}" target="_blank">原文链接</a></div>'
     return body
@@ -141,7 +142,9 @@ def render_article(art: dict) -> str:
         url_match = re.search(r'https?://[^\s\)\]\"\'<>]+', art["body"])
         url = url_match.group(0) if url_match else "#"
     body = _article_body_html(art)
-    return _ARTICLE_HTML.format(title=title, body=body, url=url)
+    # Defense against XSS in URLs (e.g. javascript:alert(...))
+    safe_url = html.escape(url, quote=True)
+    return _ARTICLE_HTML.format(title=title, body=body, url=safe_url)
 
 
 def render_html(sources_data: list[dict], today_str: str) -> str:
