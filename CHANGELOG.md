@@ -30,6 +30,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GitHub Actions CI: pytest on Python 3.9/3.11/3.12 + mypy --strict.
 
 
+## [0.3.0] - 2026-09-23 (docs/ expansion)
+
+### Added
+- **`docs/architecture.md`** — End-to-end pipeline architecture, module
+  dependency graph, data contracts between modules, state lifecycle,
+  failure-mode invariants.
+- **`docs/modules/{dedup,parser,fetcher,renderer,extractor,cli}.md`** —
+  Per-module contract / API / performance / common operator questions.
+- **`docs/recipes/{add-new-source,backfill-dedup,debug-why-article-shipped,
+  migrate-state-file,add-new-tracking-param,run-end-to-end-test}.md`** —
+  Step-by-step ops recipes for common operations.
+- **`docs/troubleshooting.md`** — 10 common failures with symptom /
+  diagnosis / fix flowcharts.
+- **`docs/reference/api.md`** — Public Python API reference with import
+  examples and calling order.
+
+### Changed
+- `README.md` rewritten with documentation navigation table and 5-min
+  getting-started section.
+
 ## [0.2.0] - 2026-09-23 (test suite expansion)
 
 ### Added
@@ -39,6 +59,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New `test_renderer.py::TestNoInnerScriptTags` pins **HTML injection defense** —
   surfaces a real XSS hole (img/svg/onerror tags passed through in article body),
   fixed in the same commit.
+- **Full docs/ directory** (`docs/architecture.md`, `docs/modules/*.md`,
+  `docs/recipes/*.md`, `docs/troubleshooting.md`, `docs/reference/api.md`) —
+  module-level contracts, ops recipes, troubleshooting flowcharts, Python API reference.
 
 ### Fixed
 - **XSS in renderer**: body content was rendered as raw HTML — `<img onerror=...>`,
