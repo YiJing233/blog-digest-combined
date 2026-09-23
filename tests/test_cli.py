@@ -280,21 +280,23 @@ class TestJobDirOverrides:
         """Module-level JOB_DIR_OVERRIDES uses DEFAULT_OUTPUT_BASE."""
         assert "hf_papers_watcher" in cli.JOB_DIR_OVERRIDES
 
-    def test_resolved_path_under_default_base(self, monkeypatch):
-        """The hf_papers_watcher override is rooted at the ORIGINAL DEFAULT_OUTPUT_BASE.
+    def test_resolved_path_under_default_base(self):
+        """Pin: JOB_DIR_OVERRIDES['hf_papers_watcher'] is rooted at the
+        import-time DEFAULT_OUTPUT_BASE.
 
-        (DOCUMENTED LIMITATION: JOB_DIR_OVERRIDES is frozen at import time, so
-        mutating DEFAULT_OUTPUT_BASE later does NOT change the override path.
-        This is why `build_sources_data` re-computes paths per call.)
+        (DOCUMENTED LIMITATION: frozen at import; mutating DEFAULT_OUTPUT_BASE
+        later does NOT change the override — caller's build_sources_data
+        re-computes paths per call.)
 
-        If you ever want lazy-resolution, swap the dict for a function.
-        For now, this test pins that the override is decoupled from later
-        DEFAULT_OUTPUT_BASE mutations — the value is captured at import."""
-        # Document the import-time value
-        expected_default = cli.JOB_DIR_OVERRIDES["hf_papers_watcher"]
-        # DEFAULT_OUTPUT_BASE may be reassigned in other tests; the override
-        # value is what it was at import time
-        assert expected_default == Path("/home/yiking/.hermes/cron/output/hf_papers_watcher")
+        Path is environment-dependent (CI runner has /home/runner, dev
+        machine has /home/yiking), so we check structural properties only."""
+        p = cli.JOB_DIR_OVERRIDES["hf_papers_watcher"]
+        assert p.name == "hf_papers_watcher"
+        # The parent directory must be at depth 5: .hermes/cron/output
+        # (Path.parts is the full split.)
+        assert p.parent.name == "output"
+        assert p.parent.parent.name == "cron"
+        assert p.parent.parent.parent.name == ".hermes"
 
 
 class TestAtomicWriteContract:
