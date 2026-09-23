@@ -2,10 +2,10 @@
 
 > Hermes RSS daily-digest rollup — multi-source dedup + Kami-style HTML rendering
 
-[![CI](https://github.com/yijing9718/blog-digest-combined/actions/workflows/ci.yml/badge.svg)](https://github.com/yijing9718/blog-digest-combined/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/yijing9718/blog-digest-combined/graph/badge.svg)](https://codecov.io/gh/yijing9718/blog-digest-combined)
+[![CI](https://github.com/YiJing233/blog-digest-combined/actions/workflows/ci.yml/badge.svg)](https://github.com/YiJing233/blog-digest-combined/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/YiJing233/blog-digest-combined/graph/badge.svg)](https://codecov.io/gh/YiJing233/blog-digest-combined)
 
-Hermes 是作者的[个人 AI agent 网关](https://github.com/yijing9718/hermes-agent),每天跑 4 个 RSS 摘要子 cron (iCloud 订阅 / Indie 科技 / ML 博主 / HF 论文)。
+Hermes 是作者的[个人 AI agent 网关](https://github.com/YiJing233/hermes-agent),每天跑 4 个 RSS 摘要子 cron (iCloud 订阅 / Indie 科技 / ML 博主 / HF 论文)。
 本仓库是日报汇总 rollup — 把这 4 个子 cron 的输出合并成一份 Kami 风格的 HTML/MD 文档,通过去重避免重复推送。
 
 ## 安装
