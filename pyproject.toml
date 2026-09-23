@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "blog-digest-combined"
+version = "0.1.0"
+description = "Hermes RSS daily-digest rollup — multi-source dedup + Kami-style HTML rendering"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "yijing233" }]
+keywords = ["rss", "digest", "blogwatcher", "hermes", "cron", "dedup"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+]
+
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "mypy>=1.7",
+]
+
+[project.scripts]
+blog-digest-combined = "blog_digest_combined.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers --tb=short"
+pythonpath = ["src"]
+
+[tool.coverage.run]
+source = ["blog_digest_combined"]
+omit = ["*/tests/*", "*/__pycache__/*"]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
